@@ -1,7 +1,7 @@
 /*
   ==============================================================================
 
-    This file contains the basic framework code for a JUCE plugin processor.
+	This file contains the basic framework code for a JUCE plugin processor.
 
   ==============================================================================
 */
@@ -13,57 +13,70 @@
 //==============================================================================
 /**
 */
-class SimpleEQAudioProcessor  : public juce::AudioProcessor
+class SimpleEQAudioProcessor : public juce::AudioProcessor
 {
 public:
-    //==============================================================================
-    SimpleEQAudioProcessor();
-    ~SimpleEQAudioProcessor() override;
+	//==============================================================================
+	SimpleEQAudioProcessor();
+	~SimpleEQAudioProcessor() override;
 
-    //==============================================================================
-    void prepareToPlay (double sampleRate, int samplesPerBlock) override;
-    void releaseResources() override;
+	//==============================================================================
+	
+	// Prepare to play is called before the audio processing begins(setting up the filters, buffers, DSP)
+	void prepareToPlay(double sampleRate, int samplesPerBlock) override;
 
-   #ifndef JucePlugin_PreferredChannelConfigurations
-    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
-   #endif
+	// Release resources is called when playback stops, or the processor is being deleted
+	void releaseResources() override;
 
-    void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+	//	Tells JUCE which audio configs are supported by the plugin
+#ifndef JucePlugin_PreferredChannelConfigurations
+	bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
+#endif
+	// The main processing function, called continuously by DAW/host
+	void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
-    //==============================================================================
-    juce::AudioProcessorEditor* createEditor() override;
-    bool hasEditor() const override;
+	//==============================================================================
+	// Creates the editor component that will be shown to the user
+	juce::AudioProcessorEditor* createEditor() override;
 
-    //==============================================================================
-    const juce::String getName() const override;
+	// Indicates whether the plugin has the GUI
+	bool hasEditor() const override;
 
-    bool acceptsMidi() const override;
-    bool producesMidi() const override;
-    bool isMidiEffect() const override;
-    double getTailLengthSeconds() const override;
+	//==============================================================================
+	// These methods provide information about the plugin (metadata)
+	const juce::String getName() const override;
+	bool acceptsMidi() const override;
+	bool producesMidi() const override;
+	bool isMidiEffect() const override;
+	double getTailLengthSeconds() const override;
 
-    //==============================================================================
-    int getNumPrograms() override;
-    int getCurrentProgram() override;
-    void setCurrentProgram (int index) override;
-    const juce::String getProgramName (int index) override;
-    void changeProgramName (int index, const juce::String& newName) override;
+	//==============================================================================
+	// These methods manage preset programs (not used in this simple EQ -> returns default)
+	int getNumPrograms() override;
+	int getCurrentProgram() override;
+	void setCurrentProgram(int index) override;
+	const juce::String getProgramName(int index) override;
+	void changeProgramName(int index, const juce::String& newName) override;
 
-    //==============================================================================
-    void getStateInformation (juce::MemoryBlock& destData) override;
-    void setStateInformation (const void* data, int sizeInBytes) override;
+	//==============================================================================
+	// These methods handle saving and loading of plugin state
+	void getStateInformation(juce::MemoryBlock& destData) override;
+	void setStateInformation(const void* data, int sizeInBytes) override;
 
+	// Method to create the parameter layout
+	static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
+	// This is the object that will hold and manage all our parameters
+	juce::AudioProcessorValueTreeState apvts{ *this, nullptr,  "Parameters", createParameterLayout() };
 
 private:
-    //==============================================================================
-    // APVTS parameter layout creation
-    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+	using Filter = juce::dsp::IIR::Filter<float>;
 
-    //==============================================================================
-    // APVTS declaration
-    juce::AudioProcessorValueTreeState apvts;
+	using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;
 
-    //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SimpleEQAudioProcessor)
+	using MonoChain = juce::dsp::ProcessorChain<CutFilter, Filter, CutFilter>;
+
+	MonoChain leftChain, rightChain;
+	//==============================================================================
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SimpleEQAudioProcessor)
 };
