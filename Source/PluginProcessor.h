@@ -99,6 +99,15 @@ private:
 		Peak,
 		HighCut
 	};
+
+	void updatePeakFilter(const ChainSettings& chainSettings);
+
+	//	Shorter name for the pointer type that stores biquad filter coefficients
+	using Coefficients = Filter::CoefficientsPtr;
+
+	//	Helper function which replaces one coefficient pointer with another
+	static void updateCoefficients(Coefficients& old, const Coefficients& replacements);
+
 	//==============================================================================
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SimpleEQAudioProcessor)
 };

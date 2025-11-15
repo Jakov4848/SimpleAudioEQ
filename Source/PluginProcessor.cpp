@@ -42,6 +42,25 @@ ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts) {
 	return settings;
 }
 
+void SimpleEQAudioProcessor::updatePeakFilter(const ChainSettings& chainSettings) {
+
+
+	//	Create biquad coefficients for the peak filter
+	auto peakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
+		getSampleRate(), chainSettings.peakFreq, chainSettings.peakQuality,
+		juce::Decibels::decibelsToGain(chainSettings.peakGainInDecibels));
+
+	//	Assign the coefficients to the peak filter in both left and right chains
+	updateCoefficients(leftChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
+	updateCoefficients(rightChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
+
+
+}
+
+void SimpleEQAudioProcessor::updateCoefficients(Coefficients& old, const Coefficients& replacements) {
+	*old = *replacements;
+}
+
 juce::AudioProcessorValueTreeState::ParameterLayout
 SimpleEQAudioProcessor::createParameterLayout() {
 	juce::AudioProcessorValueTreeState::ParameterLayout layout;
@@ -151,15 +170,10 @@ void SimpleEQAudioProcessor::prepareToPlay(double sampleRate,
 
 	//	Retrieve the chain settings from the APVTS
 	auto chainSettings = getChainSettings(apvts);
+	//==============================================================================
 
-	//	Create biquad coefficients for the peak filter
-	auto peakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
-		sampleRate, chainSettings.peakFreq, chainSettings.peakQuality,
-		juce::Decibels::decibelsToGain(chainSettings.peakGainInDecibels));
+	updatePeakFilter(chainSettings);
 
-	//	Assign the coefficients to the peak filter in both left and right chains
-	*leftChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
-	*rightChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
 
 	//	Create biquad coefficients for the low cut filter
 	auto cutCoefficients = juce::dsp::FilterDesign<float>::
@@ -169,11 +183,13 @@ void SimpleEQAudioProcessor::prepareToPlay(double sampleRate,
 
 	//	Assign the coefficients to the low cut filter in both left and right chains
 
+	//	All LowCut filters are OFF by default
 	auto& leftLowCut = leftChain.get<ChainPositions::LowCut>();
 	leftLowCut.setBypassed<0>(true);
 	leftLowCut.setBypassed<1>(true);
 	leftLowCut.setBypassed<2>(true);
 	leftLowCut.setBypassed<3>(true);
+
 
 	switch (chainSettings.lowCutSlope) {
 	case Slope_12: {
@@ -250,6 +266,7 @@ void SimpleEQAudioProcessor::prepareToPlay(double sampleRate,
 		break;
 	}
 	}
+	//==============================================================================
 }
 
 void SimpleEQAudioProcessor::releaseResources() {
@@ -300,12 +317,7 @@ void SimpleEQAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
 	auto chainSettings = getChainSettings(apvts);
 
-	auto peakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
-		getSampleRate(), chainSettings.peakFreq, chainSettings.peakQuality,
-		juce::Decibels::decibelsToGain(chainSettings.peakGainInDecibels));
-
-	*leftChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
-	*rightChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
+	updatePeakFilter(chainSettings);
 
 
 	auto cutCoefficients = juce::dsp::FilterDesign<float>::
