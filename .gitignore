@@ -1,16 +1,3 @@
-# Builds
-Builds/
-**/Builds/
-
-#JuceLibraryCode
-JuceLibraryCode/
-**/JuceLibraryCode/
-
-# Audio Plugin Host files
-*.filtergraph
-*.settings
-
-# VS specific
-.vs/
-*.vcxproj.user
-*.sln
+**/Builds
+**/JuceLibraryCode
+**/.DS_Store
