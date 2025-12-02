@@ -1,7 +1,7 @@
 /*
   ==============================================================================
 
-    This file contains the basic framework code for a JUCE plugin editor.
+	This file contains the basic framework code for a JUCE plugin editor.
 
   ==============================================================================
 */
@@ -14,41 +14,52 @@
 
 struct CustomRotarySlider : juce::Slider
 {
-    CustomRotarySlider() : juce::Slider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
-        juce::Slider::TextEntryBoxPosition::NoTextBox)
-    {
-    }
+	CustomRotarySlider() : juce::Slider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
+		juce::Slider::TextEntryBoxPosition::NoTextBox)
+	{
+	}
 };
 
 //==============================================================================
 /**
 */
-class SimpleEQAudioProcessorEditor  : public juce::AudioProcessorEditor
+class SimpleEQAudioProcessorEditor : public juce::AudioProcessorEditor
 {
 public:
-    SimpleEQAudioProcessorEditor (SimpleEQAudioProcessor&);
-    ~SimpleEQAudioProcessorEditor() override;
+	SimpleEQAudioProcessorEditor(SimpleEQAudioProcessor&);
+	~SimpleEQAudioProcessorEditor() override;
 
-    //==============================================================================
-    void paint (juce::Graphics&) override;
-    void resized() override;
+	//==============================================================================
+	void paint(juce::Graphics&) override;
+	void resized() override;
 
 private:
-    // This reference is provided as a quick way for your editor to
-    // access the processor object that created it.
-    SimpleEQAudioProcessor& audioProcessor;
+	// This reference is provided as a quick way for your editor to
+	// access the processor object that created it.
+	SimpleEQAudioProcessor& audioProcessor;
 
-    CustomRotarySlider peakFreqSlider,
-        peakGainSlider,
-        peakQualitySlider,
-        lowCutFreqSlider,
-        highCutFreqSlider,
-        lowCutSlopeSlider,
-        highCutSlopeSlider;
+	CustomRotarySlider peakFreqSlider,
+		peakGainSlider,
+		peakQualitySlider,
+		lowCutFreqSlider,
+		highCutFreqSlider,
+		lowCutSlopeSlider,
+		highCutSlopeSlider;
+
+	using APVTS = juce::AudioProcessorValueTreeState;
+	using Attachment = APVTS::SliderAttachment;
+
+	Attachment peakFreqSliderAttachment,
+		peakGainSliderAttachment,
+		peakQualitySliderAttachment,
+		lowCutFreqSliderAttachment,
+		highCutFreqSliderAttachment,
+		lowCutSlopeSliderAttachment,
+		highCutSlopeSliderAttachment;
 
 
 
 	std::vector<juce::Component*> getComps();
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleEQAudioProcessorEditor)
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SimpleEQAudioProcessorEditor)
 };
